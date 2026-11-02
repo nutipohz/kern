@@ -7,6 +7,7 @@ on:
       - kernel.7z
       - scripts/extract_sony_elf.py
       - scripts/inspect_payload.py
+      - scripts/report_device_trees.py
       - .github/workflows/inspect-kernel.yml
 
 permissions:
@@ -23,7 +24,7 @@ jobs:
       - name: Install 7z and archive tools
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y p7zip-full file
+          sudo apt-get install -y p7zip-full file device-tree-compiler
 
       - name: Extract user-provided archive
         shell: bash
@@ -40,6 +41,7 @@ jobs:
           cp -- "${elfs[0]}" extracted/kernel.elf
           python3 scripts/extract_sony_elf.py extracted/kernel.elf extracted/segments
           python3 scripts/inspect_payload.py
+          python3 scripts/report_device_trees.py
           file extracted/segments/segment_*.bin | tee extracted/file-types.txt
           sha256sum extracted/kernel.elf extracted/segments/segment_*.bin | tee extracted/checksums.txt
 
