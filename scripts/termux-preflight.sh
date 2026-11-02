@@ -5,7 +5,7 @@ RFS="$ROOT/build/rootfs"
 STAGE="$ROOT/build/wifi-stage"
 echo "=== Aurora 0.6: Termux preflight ==="
 for f in "$RFS/sbin/init" "$ROOT/build/aurora-initramfs/init" "$HOME/aurora-kernel-analysis/zImage"; do
- if [ -f "$f" ]; then echo "OK $f"; else echo "MISSING $f"; fi
+ if [ -f "$f" ] || [ -L "$f" ]; then echo "OK $f"; else echo "MISSING $f"; fi
 done
 mkdir -p "$STAGE"
 echo
@@ -25,8 +25,8 @@ for name in pronto_wlan.ko WCNSS_qcom_wlan_nv.bin; do
 done
 echo
 echo "=== Rootfs network binaries ==="
-for bin in /usr/sbin/sshd /usr/sbin/wpa_supplicant /usr/sbin/iw /sbin/udhcpc /usr/bin/ssh /usr/bin/iw; do
- [ ! -e "$RFS$bin" ] || echo "PRESENT $bin"
+for bin in /usr/sbin/sshd /usr/sbin/iw /usr/bin/ssh /sbin/wpa_supplicant /usr/sbin/wpa_supplicant /sbin/ip /sbin/udhcpc; do
+ if [ -e "$RFS$bin" ] || [ -L "$RFS$bin" ]; then echo "PRESENT $bin"; fi
 done
 echo
 echo "=== Staged checksums ==="
