@@ -6,6 +6,7 @@ on:
     paths:
       - kernel.7z
       - scripts/extract_sony_elf.py
+      - scripts/inspect_payload.py
       - .github/workflows/inspect-kernel.yml
 
 permissions:
@@ -38,6 +39,7 @@ jobs:
           fi
           cp -- "${elfs[0]}" extracted/kernel.elf
           python3 scripts/extract_sony_elf.py extracted/kernel.elf extracted/segments
+          python3 scripts/inspect_payload.py
           file extracted/segments/segment_*.bin | tee extracted/file-types.txt
           sha256sum extracted/kernel.elf extracted/segments/segment_*.bin | tee extracted/checksums.txt
 
