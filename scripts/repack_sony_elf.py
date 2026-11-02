@@ -54,6 +54,9 @@ for idx, (h, payload) in enumerate(zip(headers, segments)):
     struct.pack_into("<Q", body, phoff + idx * phentsize + 32, len(payload))
     struct.pack_into("<Q", body, phoff + idx * phentsize + 40, max(h["memsize"], len(payload)))
     body.extend(payload)
+last_end = max(h["offset"] + h["size"] for h in headers)
+# Sony may append padding/trailer bytes outside PT_LOAD. Preserve them.
+body.extend(original[last_end:])
 a.output.parent.mkdir(parents=True, exist_ok=True)
 a.output.write_bytes(body)
 # Verifying unchanged source image round trip is important before replacing ramdisk.
