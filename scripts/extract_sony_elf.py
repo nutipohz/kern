@@ -15,8 +15,9 @@ with src.open("rb") as handle:
     eh = handle.read(64)
     if len(eh) < 64 or eh[:4] != b"\x7fELF" or eh[4] != 2 or eh[5] != 1:
         raise SystemExit("ERROR: expected ELF64 little-endian container")
-    if struct.unpack_from("<H", eh, 18)[0] != 183:
-        raise SystemExit("ERROR: expected AArch64 ELF (e_machine=183)")
+    machine = struct.unpack_from("<H", eh, 18)[0]
+    if machine not in (40, 183):
+        raise SystemExit(f"ERROR: unexpected ELF machine={machine}; expected ARM (40) or AArch64 (183)")
     phoff = struct.unpack_from("<Q", eh, 32)[0]
     phentsize, phnum = struct.unpack_from("<HH", eh, 54)
     if phentsize < 56 or phnum == 0 or phnum > 128:
@@ -60,6 +61,6 @@ with src.open("rb") as handle:
         segments.append({"file": name, "file_offset": offset, "size": filesz, "load_address": hex(paddr), "virtual_address": hex(vaddr), "flags": flags, "signature": label, "sha256": hashlib.sha256(data).hexdigest()})
     if not segments:
         raise SystemExit("ERROR: no PT_LOAD segments found")
-    report = {"source_name": src.name, "source_size": length, "segments": segments, "note": "Segment signatures are preliminary; this is not a flashable boot.img. No boot or hardware compatibility claim."}
+    report = {"source_name": src.name, "source_size": length, "elf_machine": machine, "segments": segments, "note": "Segment signatures are preliminary; this is not a flashable boot.img. No boot or hardware compatibility claim."}
     (dest / "report.json").write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps(report, indent=2))
