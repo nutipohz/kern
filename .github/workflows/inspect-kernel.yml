@@ -9,6 +9,8 @@ on:
       - scripts/inspect_payload.py
       - scripts/report_device_trees.py
       - scripts/identify_factory.py
+      - scripts/repack_sony_elf.py
+      - scripts/termux-preflight.sh
       - .github/workflows/inspect-kernel.yml
 
 permissions:
@@ -44,6 +46,7 @@ jobs:
           python3 scripts/inspect_payload.py
           python3 scripts/report_device_trees.py
           python3 scripts/identify_factory.py
+          python3 scripts/repack_sony_elf.py extracted/kernel.elf extracted/sony-roundtrip.elf
           file extracted/segments/segment_*.bin | tee extracted/file-types.txt
           sha256sum extracted/kernel.elf extracted/segments/segment_*.bin | tee extracted/checksums.txt
 
