@@ -1,0 +1,52 @@
+name: Inspect Sony Xperia kernel ELF
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - kernel.7z
+      - scripts/extract_sony_elf.py
+      - .github/workflows/inspect-kernel.yml
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install 7z and archive tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y p7zip-full file
+
+      - name: Extract user-provided archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p input extracted
+          7z l kernel.7z
+          7z x -y kernel.7z -oinput
+          mapfile -d '' elfs < <(find input -type f -iname '*.elf' -print0)
+          if [ "${#elfs[@]}" -ne 1 ]; then
+            echo "Expected exactly one .elf file, got ${#elfs[@]}" >&2
+            exit 1
+          fi
+          cp -- "${elfs[0]}" extracted/kernel.elf
+          python3 scripts/extract_sony_elf.py extracted/kernel.elf extracted/segments
+          file extracted/segments/segment_*.bin | tee extracted/file-types.txt
+          sha256sum extracted/kernel.elf extracted/segments/segment_*.bin | tee extracted/checksums.txt
+
+      - name: Upload inspection files
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sony-kernel-elf-analysis
+          path: |
+            extracted/
+          if-no-files-found: warn
+          retention-days: 14
